@@ -1,0 +1,43 @@
+name: Continuous Deployment
+
+env:
+  ARTIFACT_NAME: lambda_handler.zip
+#  APPLICATION_NAME: csye6225-webapp
+#  DEPLOYMENT_GROUP_NAME: csye6225-webapp-deployment
+
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: zip files
+        run: |
+          zip -r ${{ env.ARTIFACT_NAME }} ./src/*
+          mkdir codedeploy_artifact
+          mv ${{ env.ARTIFACT_NAME }} ./codedeploy_artifact
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Copy Artifact to S3
+        run: |
+          aws s3 sync ./codedeploy_artifact s3://${{ secrets.CODEDEPLOY_BUCKET }}
+
+#      - name: Call Codedeploy API
+#        run: |
+#          output=$(aws deploy create-deployment --application-name ${{ env.APPLICATION_NAME }} --deployment-group-name ${{ env.DEPLOYMENT_GROUP_NAME }} --s3-location bucket=${{ secrets.CODEDEPLOY_BUCKET }},key=webservice.zip,bundleType=zip --region us-east-1 --output json)
+#          echo $output
+#          dId=$(echo $output | jq -r '.deploymentId')
+#          aws deploy wait deployment-successful --deployment-id $dId
