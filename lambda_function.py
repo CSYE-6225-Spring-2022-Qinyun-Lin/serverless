@@ -12,6 +12,8 @@ def lambda_handler(event=None, context=None):
 
     if event is not None:
         message = event['Records'][0]['Sns']['Message']
+        message = json.loads(message)
+        print(message)
         recipient = message["email"]
         token = message["token"]
     else:
