@@ -8,15 +8,25 @@ def lambda_handler(event=None, context=None):
 
     subject = "Welcome! Please verify your email address"
     sender = "noReply@prod.linqinyun.me"
-    recipient = "linqinyun@outlook.com"
+    # recipient = "linqinyun@outlook.com"
 
-    # if event is not None:
-    #     email_data = event['Records'][0]["messageAttributes"]
-    #     print(email_data)
-    #     recipient = email_data['toEmail']['stringValue']
-    # else:
-    #     recipient = "linqinyun@outlook.com"
-    #     # recipient = "846705900@qq.com"
+    if event is not None:
+        message = event['Records'][0]['Sns']['Message']
+        recipient = message["email"]
+        token = message["token"]
+    else:
+        recipient = "linqinyun@outlook.com"
+        from uuid import uuid4
+        token = uuid4()
+
+    table = boto3.resource('dynamodb', region_name=aws_region).Table('csye6225-token')
+    response = table.get_item(Key={"UserId": recipient})
+    if "Item" in response.keys():
+        item = response['Item']
+        if item["sendStatus"] == "sent":
+            return
+    else:
+        return
 
     destination = {
         'ToAddresses': [
@@ -24,14 +34,14 @@ def lambda_handler(event=None, context=None):
         ]
     }
 
-    body_text = """
-Amazon SES:
-
-    You are creating your account in our webservice, we are sending this to verify the email you provide is valid.
-
-CSYE6225 webservice team
-    """
-
+    link = "http://prod.linqinyun.me/v1/verifyUserEmail?email=%s&token=%s" % (recipient, token)
+    body_text = "Amazon SES:\n\n" \
+                "\tYou are creating your account in our webservice, " \
+                "we are sending this to verify the email you provide is valid.\n" \
+                "\tPlease click the link below to complete validation, this link will be expired in 5 minutes.\n" \
+                "\t\t %s \n\n" \
+                "CSYE6225 Webservice Team" % link
+    print(body_text)
     charset = "UTF-8"
 
     # Create a new SES resource and specify a region.
@@ -54,6 +64,10 @@ CSYE6225 webservice team
             },
             Source=sender
         )
+
+        item["sendStatus"] = "sent"
+        table.put_item(Item=item)
+
 
     # Display an error if something goes wrong.
     except ClientError as e:
