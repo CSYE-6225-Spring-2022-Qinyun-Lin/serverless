@@ -35,6 +35,6 @@ jobs:
         run: |
           aws s3 sync ./codedeploy_artifact s3://${{ secrets.CODEDEPLOY_BUCKET }}
 
-     - name: Update Function code
-       run: |
-         aws lambda update-function-code --function-name myVpc-LambdaFunction-vpQKAzkLl8u3 --s3-bucket ${{ secrets.CODEDEPLOY_BUCKET }} --s3-key ${{ env.ARTIFACT_NAME }}
+      - name: Update Function code
+        run: |
+          aws lambda update-function-code --function-name myVpc-LambdaFunction-vpQKAzkLl8u3 --s3-bucket ${{ secrets.CODEDEPLOY_BUCKET }} --s3-key ${{ env.ARTIFACT_NAME }}
