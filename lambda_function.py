@@ -36,7 +36,7 @@ def lambda_handler(event=None, context=None):
         ]
     }
 
-    link = "http://prod.linqinyun.me/v1/verifyUserEmail?email=%s&token=%s" % (recipient, token)
+    link = "https://prod.linqinyun.me/v1/verifyUserEmail?email=%s&token=%s" % (recipient, token)
     body_text = "Dear web service user:\n\n" \
                 "\tYou are creating your account in our webservice, " \
                 "we are sending this to verify the email you provide is valid.\n" \
